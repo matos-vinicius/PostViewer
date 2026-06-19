@@ -59,7 +59,8 @@ fun ListScreen(
         }
     } else {
         LazyColumn(modifier = modifier.fillMaxWidth()) {
-            items(items = posts, key = { it.id!! }) { post ->
+            items(items = posts, key = { it.post.id!! }) { item ->
+                val post = item.post
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -69,7 +70,8 @@ fun ListScreen(
                         }
                         .padding(16.dp)
                 ) {
-                    Text(text = post.title, fontSize = 18.sp)
+                    Text(text = "${post.title} (${item.commentCount} comentários)",
+                        fontSize = 18.sp)
                 }
                 HorizontalDivider()
             }

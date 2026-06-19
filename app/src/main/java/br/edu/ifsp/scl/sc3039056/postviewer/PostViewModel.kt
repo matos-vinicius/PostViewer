@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import br.edu.ifsp.scl.sc3039056.postviewer.model.entity.Comment
 import br.edu.ifsp.scl.sc3039056.postviewer.model.entity.LocalComment
 import br.edu.ifsp.scl.sc3039056.postviewer.model.entity.Post
+import br.edu.ifsp.scl.sc3039056.postviewer.model.entity.PostWithCommentCount
 import br.edu.ifsp.scl.sc3039056.postviewer.model.network.PostsService
 import br.edu.ifsp.scl.sc3039056.postviewer.model.repository.LocalCommentRepository
 import kotlinx.coroutines.Dispatchers
@@ -41,15 +42,25 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     val commentsErrorMessage: StateFlow<String?> = _commentsErrorMessage.asStateFlow()
 
     // ─── Lista de posts ─────────────────────────────────────────────────
-    private val _posts = MutableStateFlow<List<Post>>(emptyList())
-    val posts: StateFlow<List<Post>> = _posts.asStateFlow()
+    private val _posts = MutableStateFlow<List<PostWithCommentCount>>(emptyList())
+    val posts: StateFlow<List<PostWithCommentCount>> = _posts.asStateFlow()
 
     fun updatePosts() {
         viewModelScope.launch(Dispatchers.IO) {
             _isLoadingPosts.value = true
             _postsErrorMessage.value = null
             try {
-                _posts.value = postsRepository.getPosts()
+                val postsList = postsRepository.getPosts()
+                val postsWithCounts = postsList.map { post ->
+                    val comments = postsRepository.getCommentsByPostId(post.id!!)
+                    PostWithCommentCount(
+                        post = post,
+                        commentCount = comments.size
+                    )
+                }
+
+                _posts.value = postsWithCounts
+
             } catch (e: Exception) {
                 _postsErrorMessage.value = "Não foi possível carregar os posts."
             }
